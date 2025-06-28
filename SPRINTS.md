@@ -1,0 +1,5 @@
+- Simulate Flights data and store it into SQL DB
+- Model data architecture - pydantic
+- Design AI Agent to understand user input query
+- Design Metaheuristic Algorithm to find a optimial solution to user request
+- Deploy in AWS EC2 Slot?
