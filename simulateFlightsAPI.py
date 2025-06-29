@@ -1,7 +1,7 @@
 import random
 from datetime import datetime, timedelta, time, date
 import pytz
-from src.flight import Base, Flight
+from src.flight import Base, FlightDB
 import os
 
 from sqlalchemy import create_engine, Column, Integer, String, Float
@@ -157,28 +157,27 @@ dates = [start_date + timedelta(days=i) for i in range(180)]
 flights = []
 for _ in range(20000):
     from_city, to_city = random.sample(list(european_cities.keys()), 2)
-    date = random.choice(dates)
+    dateValue = random.choice(dates)
     from_tz = pytz.timezone(european_cities[from_city])
     to_tz = pytz.timezone(european_cities[to_city])
 
-    base_price = random.randint(40, 700)
-    price_fluctuation = random.uniform(0.9, 1.4)
+    base_price = random.randint(20, 400)
     duration_hours = round(random.uniform(1.0, 5.0), 1)
     stayovers=random.choice([0, 1])
 
-    dep_hour = random.randint(5, 20)
+    dep_hour = random.randint(5, 22)
     dep_minute = random.choice([0, 15, 30, 45])
-    dep_datetime = from_tz.localize(datetime.combine(date, time(dep_hour, dep_minute)))
+    dep_datetime = from_tz.localize(datetime.combine(dateValue, time(dep_hour, dep_minute)))
 
     arr_datetime = dep_datetime + timedelta(hours=duration_hours)
     arr_datetime = arr_datetime.astimezone(to_tz)
 
-    flightData = Flight(
+    flightData = FlightDB(
         from_city=from_city,
         to_city=to_city,
-        departure_date=date.strftime("%Y-%m-%d"),
-        departure_time_local=dep_datetime.strftime("%H:%M %Z"),
-        arrival_time_local=arr_datetime.strftime("%H:%M %Z"),
+        departure_date=dateValue,
+        departure_time_local=dep_datetime,
+        arrival_time_local=arr_datetime,
         price_eur=dynamic_price(
             base_price,
             dep_datetime,
