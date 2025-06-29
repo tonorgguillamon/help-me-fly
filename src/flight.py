@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Float, Date, Date
 from sqlalchemy.orm import declarative_base, sessionmaker
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime, date
+from typing import Optional
 
 Base = declarative_base()
 
@@ -30,3 +31,22 @@ class Flight(BaseModel):
     duration_hours: float
 
     model_config = ConfigDict(from_attributes=True)
+
+    def __str__(self):
+        return super().__str__()
+    
+    def __repr__(self):
+        return f"Flight: {self.flight_number} | " \
+        f"Origin: {self.from_city} -> Destination: {self.to_city} | " \
+        f"Departure: {self.departure_time_local}, arriving at {self.arrival_time_local} (duration {self.duration_hours} hours) | " \
+        f"Price: {self.price_eur} euro | " \
+        f"Stayovers: {self.stayovers}"
+    
+class FlightSelection(BaseModel):
+    startDate: date # spectrum of days you want to fly
+    endDate: date
+    priceMax: Optional[int] = None
+    startCity: str
+    destinationCity: Optional[str] = None
+    vetoDestinations: Optional[list[str]] = None
+    stayoversAllowed: bool = True

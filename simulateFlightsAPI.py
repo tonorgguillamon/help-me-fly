@@ -161,7 +161,7 @@ for _ in range(20000):
     from_tz = pytz.timezone(european_cities[from_city])
     to_tz = pytz.timezone(european_cities[to_city])
 
-    base_price = random.randint(20, 400)
+    base_price = random.randint(10, 300)
     duration_hours = round(random.uniform(1.0, 5.0), 1)
     stayovers=random.choice([0, 1])
 
