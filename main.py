@@ -1,8 +1,10 @@
 from src.flightSearcher import FlightEngine, FlightSelection
 from src.flight import Flight
 from datetime import date, datetime
+import random
 
 def main():
+    random.seed(50)
     DB = "flightsAPI"
     flightEngine = FlightEngine(DB)
     

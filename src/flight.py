@@ -47,6 +47,6 @@ class FlightSelection(BaseModel):
     endDate: date
     priceMax: Optional[int] = None
     startCity: str
-    destinationCity: Optional[str] = None
+    destinationCities: Optional[list[str]] = None
     vetoDestinations: Optional[list[str]] = None
     stayoversAllowed: bool = True

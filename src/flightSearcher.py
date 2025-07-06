@@ -23,6 +23,8 @@ class FlightEngine:
             ]
             if trip.priceMax:
                 filters.append(FlightDB.price_eur <= trip.priceMax)
+            if trip.destinationCities:
+                filters.append(FlightDB.to_city.in_(trip.destinationCities))
             if trip.vetoDestinations: # filter out with ~
                 filters.append(~FlightDB.to_city.in_(trip.vetoDestinations))
             if not trip.stayoversAllowed:
