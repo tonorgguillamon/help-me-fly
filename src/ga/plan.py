@@ -25,14 +25,14 @@ class TravelPlan:
     def __init__(
             self,
             flightEngine: FlightEngine,
-            travellers: list[Traveller],
             fromDate: date,
             toDate: date,
             vetoCities: list[str] = None,
             preferredCities: list[str] = None,
             priceMax: int = None,
             days: int = None,
-            allowStayover: bool = True
+            allowStayover: bool = True,
+            availableDestinations: list[str] = None
         ):
         
         self.flightEngine = flightEngine
@@ -42,18 +42,16 @@ class TravelPlan:
         self.priceMax = priceMax
         self.days = days
         self.allowStayover = allowStayover
-        self.travellers = travellers
         self.preferredCities = preferredCities
+        self.availableDestinations = availableDestinations
 
-        self.destinationCities = []
-
-    def createRoute(self, originCity: str, destinations: list[str] = []):
+    def createRoutes(self, originCity: str, destination: str) -> list[PotentialRoutes]:
         trip = FlightSelection(
             startDate=self.fromDate,
             endDate=self.toDate,
             priceMax=self.priceMax,
             startCity=originCity,
-            destinationCity=destinations,
+            destinationCity=destination,
             vetoDestinations=self.vetoCities,
             stayoversAllowed=self.allowStayover
         )
@@ -66,8 +64,8 @@ class TravelPlan:
                 startDate=goingFlight.departure_date + timedelta(days=1),
                 endDate=goingFlight.departure_date + timedelta(days=self.days),
                 priceMax=self.priceMax - goingFlight.price_eur,
-                startCity=goingFlight.to_city,
-                destinationCity=originCity,
+                startCity=destination,
+                destinationCities=originCity,
                 stayoversAllowed=self.allowStayover
             )
 
@@ -82,83 +80,72 @@ class TravelPlan:
                 routes.append(route)
 
         return routes
-    
-    def createRoutesForTraveller(self, traveller: Traveller):
-        traveller.potentialRoutes = self.createRoute(
-            originCity=traveller.origin,
-            destinationCity=self.destinationCities
-            )
-
-    def createAllRoutes(self):
-        for traveller in self.travellers:
-            self.createRoutesForTraveller(traveller)
-            if len(self.destinationCities) == 0: # the first traveller defines the destinations
-                self.destinationCities = [route.flightToGo.to_city for route in traveller.potentialRoutes]
 
 class Trip:
     """ This is the Individual for the Genetic Algorithm """
-    def __init__(self, travellers: list[Traveller]):
+    def __init__(self, travellers: list[Traveller], travelPlan: TravelPlan):
         self.travellers = copy.deepcopy(travellers)
-        random.shuffle(self.travellers) # to add more randomness
-        
-        self.chosenDestination = ""
+
+        """ Generating routes here allows to fix the destination for all the travellers """
+        self.chosenDestination = random.choice(travelPlan.availableDestinations)
+
+        for traveller in self.travellers:
+            traveller.potentialRoutes = travelPlan.createRoutes(
+                traveller.origin,
+                self.chosenDestination
+            )
 
     def selectRoutes(self):
-        """ First travel leads the destination city """
-        leadTraveller = self.travellers[0]
-        potentialRoute = random.choice(leadTraveller.potentialRoutes)
-        route = Route(
+        for traveller in self.travellers:
+            potentialRoute = random.choice(traveller.potentialRoutes)
+            route = Route(
                 flightToGo=potentialRoute.flightToGo,
                 flightBack=random.choice(potentialRoute.flightsBack),
             )
+            route.cost = route.flightToGo.price_eur + route.flightBack.price_eur
+            traveller.selectedRoute = route
 
-        route.cost = route.flightToGo.price_eur + route.flightBack.price_eur
-        leadTraveller.selectedRoute = route
-
-        self.chosenDestination = route.flightToGo.to_city
-
-        for traveler in self.travellers[1:]:
-            matchingRoutes = [r for r in traveler.potentialRoutes if r.flightToGo.to_city == self.chosenDestination]
-            
-            if matchingRoutes:
-                potentialRoute = random.choice(matchingRoutes)
-                route = Route(
-                    flightToGo=potentialRoute.flightToGo,
-                    flightBack=random.choice(potentialRoute.flightsBack),
-                )
-
-                route.cost = route.flightToGo.price_eur + route.flightBack.price_eur
-                traveler.selectedRoute = route
-            else:
-                traveler.selectedRoute = None #TODO: decide what to do here!
-                
     def deltaTime(self, arrival: bool = True): # arrival or leaving
         deltas = []
         if arrival:
-            times = [traveler.selectedRoute.flightToGo.arrival_time_local for traveler in self.travellers]
+            times = [traveller.selectedRoute.flightToGo.arrival_time_local for traveller in self.travellers]
         else: # then, leaving
-            times = [traveler.selectedRoute.flightBack.departure_time_local for traveler in self.travellers]
+            times = [traveller.selectedRoute.flightBack.departure_time_local for traveller in self.travellers]
 
+        times.sort()
+        
+        deltas = [abs(times[i+1] - times[i]) for i in range(len(times)-1)]
+        # approximation -> the goal is to lower deltas, not to be accurate in calculating all deltas
+
+        """ The following logic is more understandable, but way slower:
         n_travelers = len(times)
-
         for i in range(n_travelers):
             for j in range(i+1,n_travelers):
                 delta = abs(times[i] - times[j])
                 deltas.append(delta)
+        """
         
         return sum(deltas)
+    
+    def deltaBudget(self):
+        return sum(abs(traveller.budget - traveller.selectedRoute.cost) for traveller in self.travellers)
     
     def isPreferredDestination(self, preferredDestinations: list[str]) -> bool:
         return self.chosenDestination in preferredDestinations
     
-    def calculateDepartureSuitability(self) -> int:
+    def calculateDeparturesSuitability(self) -> int:
         badDepartures = 0
-        for traveler in self.travellers:
-            if traveler.selectedRoute.flightToGo.departure_date.weekday() == 6:
+        for traveller in self.travellers:
+            if traveller.selectedRoute.flightToGo.departure_date.weekday() == 6:
                 """ Starting trip on Sunday -> wasting weekend """
                 badDepartures+=1
-            if traveler.selectedRoute.flightBack.departure_date.weekday() in [4, 5]:
+            if traveller.selectedRoute.flightBack.departure_date.weekday() in [4, 5]:
                 """ Coming back on Friday or Saturday -> wasting weekend """
+                badDepartures+=1
+        return badDepartures
+    
+    def calculateNumStayovers(self) -> int:
+        return sum(traveller.selectedRoute.flightToGo.stayovers + traveller.selectedRoute.flightBack.stayovers for traveller in self.travellers)
 
 # Within preferred destinations
 # Arrival time close
