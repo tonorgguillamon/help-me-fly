@@ -45,7 +45,7 @@ class Flight(BaseModel):
 class FlightSelection(BaseModel):
     startDate: date # spectrum of days you want to fly
     endDate: date
-    priceMax: Optional[int] = None
+    priceMax: Optional[float] = None
     startCity: str
     destinationCity: Optional[str] = None
     vetoDestinations: Optional[list[str]] = None
