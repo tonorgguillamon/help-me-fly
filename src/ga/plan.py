@@ -5,6 +5,7 @@ from typing import Optional
 from datetime import date, timedelta
 import random
 import copy
+import time
 
 class PotentialRoutes(BaseModel):
     flightToGo: Flight
@@ -80,17 +81,23 @@ class TravelPlan:
                 routes.append(route)
 
         return routes
+    
+class Plan(BaseModel):
+    listTravellers: list[Traveller]
+    travelPlan: TravelPlan
 
 class Trip:
     """ This is the Individual for the Genetic Algorithm """
-    def __init__(self, travellers: list[Traveller], travelPlan: TravelPlan):
+    def __init__(self, travellers: list[Traveller], plan: TravelPlan):
+        t0 = time.time()
         self.travellers = copy.deepcopy(travellers)
-
+        print(f"Deepcopy took {time.time() - t0:.4f} seconds")
         """ Generating routes here allows to fix the destination for all the travellers """
-        self.chosenDestination = random.choice(travelPlan.availableDestinations)
+        self.chosenDestination = random.choice(plan.availableDestinations)
 
+    def createPotentialRoutes(self, plan: TravelPlan):
         for traveller in self.travellers:
-            traveller.potentialRoutes = travelPlan.createRoutes(
+            traveller.potentialRoutes = plan.createRoutes(
                 traveller.origin,
                 self.chosenDestination
             )
@@ -125,13 +132,10 @@ class Trip:
                 deltas.append(delta)
         """
         
-        return sum(deltas)
+        return sum(delta.total_seconds() for delta in deltas)
     
     def deltaBudget(self):
         return sum(abs(traveller.budget - traveller.selectedRoute.cost) for traveller in self.travellers)
-    
-    def isPreferredDestination(self, preferredDestinations: list[str]) -> bool:
-        return self.chosenDestination in preferredDestinations
     
     def calculateDeparturesSuitability(self) -> int:
         badDepartures = 0

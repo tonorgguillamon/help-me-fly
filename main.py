@@ -50,10 +50,7 @@ def main():
         priceMax=300,
         days=10,
         availableDestinations=[
-            "London", "Paris", "Rotterdam", "Berlin",
-            "Munich", "Vienna", "Krakow", "Budapest",
-            "Rome", "Milan", "Copenhagen", "Hesinki",
-            "Oslo", "Malta", "Porto", "Dublin"
+            "London", "Paris", "Rotterdam", "Berlin"
         ],
     )
 

@@ -6,15 +6,16 @@ class FlightEngine:
     def __init__(self, databaseName: str):
         self.engine = create_engine(f'sqlite:///{databaseName}.db')
         self.Session = sessionmaker(bind=self.engine)
-        self.session = self.Session()
 
     def retrieveAllFlights(self):
+        session = self.Session()
         try:
-            return self.session.query(FlightDB).all()
+            return session.query(FlightDB).all()
         finally:
-            self.session.close()
+            session.close()
 
     def retrieveFlights(self, trip: FlightSelection):
+        session = self.Session()
         try:
             filters = [
                 FlightDB.departure_date >= trip.startDate,
@@ -30,6 +31,6 @@ class FlightEngine:
             if not trip.stayoversAllowed:
                 filters.append(FlightDB.stayovers == 0)
 
-            return self.session.query(FlightDB).filter(*filters).all()
+            return session.query(FlightDB).filter(*filters).all()
         finally:
-            self.session.close()
+            session.close()

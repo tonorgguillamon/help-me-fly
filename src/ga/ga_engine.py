@@ -9,13 +9,14 @@ from deap import base, creator, tools
 import random
 from src.ga.plan import *
 from src.flightSearcher import FlightEngine
+import multiprocessing
 
 # Individual
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", Trip, fitness=creator.FitnessMin)
 
 class GeneticAlgorithm:
-    def __init__(self, travellersTemplate, travelPlan, populationSize=100, ngen=50, probCrossover=0.9, probMutate=0.2):
+    def __init__(self, travellersTemplate, travelPlan, populationSize=20, ngen=20, probCrossover=0.9, probMutate=0.2):
         self.populationSize = populationSize
         self.ngen = ngen
         self.travellersTemplate = travellersTemplate
@@ -32,11 +33,14 @@ class GeneticAlgorithm:
         self.toolbox.register("select", tools.selTournament, tournsize=3)
 
     def create_individual(self):
-        individual = Trip(
+        individual = creator.Individual(
             travellers=self.travellersTemplate,
-            travelPlan=self.travelPlan
+            plan=self.travelPlan
         )
 
+        individual.createPotentialRoutes(plan=self.travelPlan)
+        if any(not traveller.potentialRoutes for traveller in individual.travellers):
+            return None # there is no flight to the chosen destination for at least one traveller
         individual.selectRoutes()
         return individual
 
@@ -45,35 +49,69 @@ class GeneticAlgorithm:
         deltaBudget = individual.deltaBudget()
         deltaTimeArrival = individual.deltaTime(arrival=True)
         deltaTimeBack = individual.deltaTime(arrival=False)
-        preferredDestination = 0 if individual.isPreferredDestination() else 1
         depaturesSuitability = individual.calculateDeparturesSuitability()
         numStayovers = individual.calculateNumStayovers()
+
+        print("RAW VALUES: \n" \
+        f"Total Cost: {totalCost} \n" \
+        f"Delta Budget: {deltaBudget} \n" \
+        f"Delta Time Arrival: {deltaTimeArrival} \n" \
+        f"Delta Time Back: {deltaTimeBack} \n" \
+        f"Departure Suitability: {depaturesSuitability} \n" \
+        f"Number Stayovers: {numStayovers} \n" \
+        "------------------------------------------------ \n"
+        )
+
+        # Normalization:
+        totalCost /= 1000 * len(individual.travellers)
+        deltaBudget /= 500 * len(individual.travellers)
+        deltaTimeArrival = 3600 * 24 * len(individual.travellers) # 24 hours deviation, in seconds
+        deltaTimeBack = 3600 * 24 * len(individual.travellers)
+        depaturesSuitability /= len(individual.travellers)*2
+        numStayovers /= len(individual.travellers)*4 # 4 stayovers per traveller is already extreme
 
         penalization = (
             totalCost
             + deltaBudget
             + deltaTimeArrival
             + deltaTimeBack
-            + preferredDestination
             + depaturesSuitability
             + numStayovers
         )
 
+        print("NORMALIZED VALUES: \n" \
+        f"Total Cost: {totalCost} \n" \
+        f"Delta Budget: {deltaBudget} \n" \
+        f"Delta Time Arrival: {deltaTimeArrival} \n" \
+        f"Delta Time Back: {deltaTimeBack} \n" \
+        f"Departure Suitability: {depaturesSuitability} \n" \
+        f"Number Stayovers: {numStayovers} \n" \
+        " ---------------------------------------------- \n"
+        )
+
         return (penalization, )
 
-    def mate_individuals(self, individual1: Trip, individual2: Trip, coef_prob: float = 0.9):
-        """Swap a random slice of selectedRoutes between two individuals"""
-        size = len(individual1.travellers)
-        p1, p2 = sorted(random.sample(range(size), 2)) # takes two breaking points
+    def mate_individuals(self, individual1: Trip, individual2: Trip):
+        """Swap the chosen destination from two individuals and recalculate potential routes 
+        From the potential routes select from scratch the routes. It's not the traditional mating
+        however, since all travellers must have the same destination it's not possible to
+        swap travellers from individuals """
+        tempDestination = individual1.chosenDestination
 
-        for i in range(p1, p2):
-            individual1.travellers[i].selectedRoute, individual2.travellers[i].selectedRoute = (
-                individual2.travellers[i].selectedRoute, individual1.travellers[i].selectedRoute
-            )
+        individual1.chosenDestination = individual2.chosenDestination
+        individual2.chosenDestination = tempDestination
+
+        individual1.createPotentialRoutes(self.travelPlan)
+        individual1.selectRoutes()
+
+        individual2.createPotentialRoutes(self.travelPlan)
+        individual2.selectRoutes()
+
         return individual1, individual2
 
     def mutate_individual(self, individual: Trip, coef_prob: float = 0.2):
-        """ Randomly mutate an individual's selected routes with probability """
+        """ Randomly mutate an individual's selected routes 
+        Takes a different potential route, and regenerates the flight to go and the flight to come back """
         for traveller in individual.travellers:
             newPotentialRoute = random.choice(traveller.potentialRoutes)
             if newPotentialRoute.flightsBack:
@@ -88,8 +126,12 @@ class GeneticAlgorithm:
 
     def run(self):
         bestInvididuals = []
+        population = []
 
-        population = [self.toolbox.individual() for _ in range(self.populationSize)]
+        for _ in range(self.populationSize):
+            individual = self.toolbox.individual()
+            if individual:
+                population.append(individual)
         
         for gen in range(self.ngen):
             offspring = self.toolbox.select(population, len(population))
@@ -105,7 +147,7 @@ class GeneticAlgorithm:
             for mutant in offspring:
                 if random.random() < self.coefProbMutate:
                     self.toolbox.mutate(mutant)
-                    del mutant.fitness.valus
+                    del mutant.fitness.values
             
             # reevaluate individuals with invalid fitness (those that suffered a modification)
             invalidIndividuals = [individual for individual in offspring if not individual.fitness.valid]
@@ -118,4 +160,6 @@ class GeneticAlgorithm:
 
             best = tools.selBest(population, 1)[0]
             bestInvididuals.append(best.fitness.values[0])
+            print(f"Best score of the generation {gen}: {best.fitness.values[0]} \n Individual: {best}")
+
         return bestInvididuals
