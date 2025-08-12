@@ -17,7 +17,7 @@ Metaheuristic-based algorithm to converge into an optimal solution which suits u
 - REST API - Flask/FastAPI
 
 ## DEMO
-# Real scenario tested on the agent
+### Real scenario tested on the agent
 User query:
 Talk with the agency: we are two people. One from malaga with 500 euro budget. The other from valencia, with 600 euro budget. 
 we want to travel for 5 days between september and december 2025. We would like to visit either of the following cities: paris, london, milan, warsaw, barcelona, any city in denmark, any city in norway and rome. Price max of the whole trip 700 euro
@@ -51,4 +51,4 @@ Response:
 This is used to build the Plan instance, which is fed to the Genetic Algorithm.
 With the foundations stablished, the GA starts to evolve, storing the best individual from each offspring.
 After the determined number of generations, we can see how the algorithm is converging:
-![ga_evolution](docs/ga_evolution.PNG)
+![ga_evolution](docs/ga_evolution.png)
