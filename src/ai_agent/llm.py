@@ -2,27 +2,26 @@ import boto3
 import json
 from src.ga.plan import Plan
 import re
-import prompt
 
 class LLM:
-    def __init__(self, endpoint_id: str, region: str = "us-west-2", version: str = "bedrock-2023-05-31"):
+    def __init__(self, endpoint_id: str, boto3_session: boto3.Session, region: str = "eu-north-1", version: str = "bedrock-2023-05-31"):
         self.model_id = endpoint_id
-        self.client = boto3.client("bedrock-runtime", region_name=region)
+        self.client = boto3_session.client("bedrock-runtime", region_name=region)
         self.version = version
 
-    def buildPrompt(self, system: str, user: str):
+    def buildPrompt(self, user: str):
         return [
-            {"role":"system", "content": [{"type": "text", "text": system}]},
             {"role":"user", "content": [{"type": "text", "text": user}]}
         ]
     
     def invoke(self, systemPrompt: str, userPrompt: str):
-        prompt = self.buildPrompt(systemPrompt, userPrompt)
+        prompt = self.buildPrompt(userPrompt)
 
         body = {
             "anthropic_version": self.version,
             "messages": prompt,
-            "max_tokens": 1024,
+            "system": systemPrompt,
+            "max_tokens": 2048,
             "temperature": 0.2
         }
 
@@ -52,3 +51,16 @@ class LLM:
         if not match:
             raise ValueError("No JSON found in model output.")
         return match.group(0)
+    
+    def _parse_response(self, text: str) -> str:
+        try:
+            start = text.index("{")
+            end = text.rindex("}")
+
+            explanation = text[:start].strip() + "\n" + text[end+1:].strip()
+            json_str = text[start:end+1].strip()
+            structured = json.loads(json_str)
+
+            return explanation, structured
+        except Exception as e:
+            return text, {}

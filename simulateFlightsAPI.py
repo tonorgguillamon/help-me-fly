@@ -155,7 +155,7 @@ start_date = datetime.today()
 dates = [start_date + timedelta(days=i) for i in range(180)]
 
 flights = []
-for _ in range(20000):
+for _ in range(200000):
     from_city, to_city = random.sample(list(european_cities.keys()), 2)
     dateValue = random.choice(dates)
     from_tz = pytz.timezone(european_cities[from_city])

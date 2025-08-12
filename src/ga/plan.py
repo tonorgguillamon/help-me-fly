@@ -86,6 +86,10 @@ class Plan(BaseModel):
     listTravellers: list[Traveller]
     travelPlan: TravelPlan
 
+    model_config = {
+        "arbitrary_types_allowed": True
+    }
+
 class Trip:
     """ This is the Individual for the Genetic Algorithm """
     def __init__(self, travellers: list[Traveller], plan: TravelPlan):
