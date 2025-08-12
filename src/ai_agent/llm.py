@@ -1,6 +1,5 @@
 import boto3
 import json
-from src.ga.plan import Plan
 import re
 
 class LLM:
@@ -36,31 +35,26 @@ class LLM:
 
         return generated_text
 
-    def generateTrip(self, systemPrompt: str, userPrompt: str) -> Plan:
+    def generateTrip(self, systemPrompt: str, userPrompt: str) -> json:
         generatedText = self.invoke(systemPrompt, userPrompt)
-        json_str = self._extract_json(generatedText)
+        print(generatedText)
+        json_str = self._parse_response(generatedText)
 
-        return Plan.model_validate_json(json_str)
+        if not json_str:
+            return generatedText
+        return json_str
     
     def explainTrip(self, systemPrompt: str, userPrompt: str) -> str:
         generatedText = self.invoke(systemPrompt, userPrompt)
         return generatedText
     
-    def _extract_json(self, text: str) -> str:
-        match = re.search(r"\{.*\}", text, re.DOTALL)
-        if not match:
-            raise ValueError("No JSON found in model output.")
-        return match.group(0)
-    
-    def _parse_response(self, text: str) -> str:
+    def _parse_response(self, text: str) -> json:
         try:
             start = text.index("{")
             end = text.rindex("}")
-
-            explanation = text[:start].strip() + "\n" + text[end+1:].strip()
             json_str = text[start:end+1].strip()
             structured = json.loads(json_str)
 
-            return explanation, structured
+            return structured
         except Exception as e:
-            return text, {}
+            return {}

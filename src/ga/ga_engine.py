@@ -10,35 +10,37 @@ import random
 from src.ga.plan import *
 from src.flightSearcher import FlightEngine
 import multiprocessing
+from functools import partial
 
 # Individual
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", Trip, fitness=creator.FitnessMin)
 
 class GeneticAlgorithm:
-    def __init__(self, travellersTemplate, travelPlan, populationSize=20, ngen=20, probCrossover=0.9, probMutate=0.2):
+    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=5, ngen=1, probCrossover=0.9, probMutate=0.2):
         self.populationSize = populationSize
         self.ngen = ngen
         self.travellersTemplate = travellersTemplate
         self.travelPlan = travelPlan
+        self.flightEngine = flightEngine
 
         self.coefProbCrossover = probCrossover
         self.coefProbMutate = probMutate
 
         self.toolbox = base.Toolbox()
-        self.toolbox.register("individual", self.create_individual)
+        self.toolbox.register("individual", partial(self.create_individual, self.flightEngine))
         self.toolbox.register("evaluate", self.evaluate_individual)
         self.toolbox.register("mate", self.mate_individuals)
         self.toolbox.register("mutate", self.mutate_individual)
         self.toolbox.register("select", tools.selTournament, tournsize=3)
 
-    def create_individual(self):
+    def create_individual(self, flightEngine: FlightEngine):
         individual = creator.Individual(
             travellers=self.travellersTemplate,
             plan=self.travelPlan
         )
 
-        individual.createPotentialRoutes(plan=self.travelPlan)
+        individual.createPotentialRoutes(plan=self.travelPlan, flightEngine=flightEngine)
         if any(not traveller.potentialRoutes for traveller in individual.travellers):
             return None # there is no flight to the chosen destination for at least one traveller
         individual.selectRoutes()
@@ -101,10 +103,10 @@ class GeneticAlgorithm:
         individual1.chosenDestination = individual2.chosenDestination
         individual2.chosenDestination = tempDestination
 
-        individual1.createPotentialRoutes(self.travelPlan)
+        individual1.createPotentialRoutes(self.travelPlan, self.flightEngine)
         individual1.selectRoutes()
 
-        individual2.createPotentialRoutes(self.travelPlan)
+        individual2.createPotentialRoutes(self.travelPlan, self.flightEngine)
         individual2.selectRoutes()
 
         return individual1, individual2
@@ -125,7 +127,7 @@ class GeneticAlgorithm:
         # internally DEAP is built to handle pipelines where the operators are chained, and all operators return tuples for consistency 
 
     def run(self):
-        bestInvididuals = []
+        bestInvididualsScore = []
         population = []
 
         for _ in range(self.populationSize):
@@ -159,7 +161,8 @@ class GeneticAlgorithm:
             population[:] = offspring
 
             best = tools.selBest(population, 1)[0]
-            bestInvididuals.append(best.fitness.values[0])
+
+            bestInvididualsScore.append(best.fitness.values[0])
             print(f"Best score of the generation {gen}: {best.fitness.values[0]} \n Individual: {best}")
 
-        return bestInvididuals
+        return bestInvididualsScore, best

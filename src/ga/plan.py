@@ -25,7 +25,6 @@ class Traveller(BaseModel):
 class TravelPlan:
     def __init__(
             self,
-            flightEngine: FlightEngine,
             fromDate: date,
             toDate: date,
             vetoCities: list[str] = None,
@@ -35,8 +34,7 @@ class TravelPlan:
             allowStayover: bool = True,
             availableDestinations: list[str] = None
         ):
-        
-        self.flightEngine = flightEngine
+    
         self.fromDate = fromDate
         self.toDate = toDate
         self.vetoCities = vetoCities
@@ -46,7 +44,7 @@ class TravelPlan:
         self.preferredCities = preferredCities
         self.availableDestinations = availableDestinations
 
-    def createRoutes(self, originCity: str, destination: str) -> list[PotentialRoutes]:
+    def createRoutes(self, originCity: str, destination: str, flightEngine: FlightEngine) -> list[PotentialRoutes]:
         trip = FlightSelection(
             startDate=self.fromDate,
             endDate=self.toDate,
@@ -57,7 +55,7 @@ class TravelPlan:
             stayoversAllowed=self.allowStayover
         )
 
-        goingFlights = self.flightEngine.retrieveFlights(trip)
+        goingFlights = flightEngine.retrieveFlights(trip)
         
         routes = []
         for goingFlight in goingFlights:
@@ -70,7 +68,7 @@ class TravelPlan:
                 stayoversAllowed=self.allowStayover
             )
 
-            flightsBack = self.flightEngine.retrieveFlights(trip)
+            flightsBack = flightEngine.retrieveFlights(trip)
 
             route = PotentialRoutes(
                 flightToGo=goingFlight,
@@ -99,11 +97,12 @@ class Trip:
         """ Generating routes here allows to fix the destination for all the travellers """
         self.chosenDestination = random.choice(plan.availableDestinations)
 
-    def createPotentialRoutes(self, plan: TravelPlan):
+    def createPotentialRoutes(self, plan: TravelPlan, flightEngine: FlightEngine):
         for traveller in self.travellers:
             traveller.potentialRoutes = plan.createRoutes(
                 traveller.origin,
-                self.chosenDestination
+                self.chosenDestination,
+                flightEngine
             )
 
     def selectRoutes(self):
