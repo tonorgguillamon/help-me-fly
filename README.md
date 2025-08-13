@@ -21,6 +21,9 @@ Metaheuristic-based algorithm to converge into an optimal solution which suits u
 
 ## DEMO
 ### Real scenario tested on the agent
+Simple user interface (FastAPI + HTML)
+![alt text](docs/ui-simple.png)
+
 User query
 
 Talk with the agency: we are two people. One from malaga with 500 euro budget. The other from valencia, with 600 euro budget. 
@@ -56,3 +59,34 @@ This is used to build the Plan instance, which is fed to the Genetic Algorithm.
 With the foundations stablished, the GA starts to evolve, storing the best individual from each offspring.
 After the determined number of generations, we can see how the algorithm is converging:
 ![ga_evolution](docs/ga_evolution.png)
+
+Suggested trip:
+
+Chosen destination: London
+```
+Traveller 1:
+  Origin: Malaga
+  Budget: €500.00
+  Outbound Flight:
+    Malaga → London
+    Date: 2025-11-23 | Departure: 20:45:00 | Arrival: 00:15:00
+    Price: €309.11 | Stayovers: 0 | Flight: LH3498 | Duration: 4.5h
+  Return Flight:
+    London → Malaga
+    Date: 2025-11-26 | Departure: 06:00:00 | Arrival: 12:00:00
+    Price: €29.26 | Stayovers: 1 | Flight: AF8903 | Duration: 5.0h
+  Total Route Cost: €338.37
+
+Traveller 2:
+  Origin: Valencia
+  Budget: €600.00
+  Outbound Flight:
+    Valencia → London
+    Date: 2025-11-11 | Departure: 18:15:00 | Arrival: 22:09:00
+    Price: €314.99 | Stayovers: 1 | Flight: IB8996 | Duration: 4.9h
+  Return Flight:
+    London → Valencia
+    Date: 2025-11-13 | Departure: 11:30:00 | Arrival: 15:36:00
+    Price: €170.37 | Stayovers: 1 | Flight: AZ450 | Duration: 3.1h
+  Total Route Cost: €485.36
+```

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Help Me Fly - Chat Agent</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; background: #f7f7f7; }
+        .chat-box { background: #fff; border-radius: 8px; padding: 1em; box-shadow: 0 2px 8px #ccc; max-width: 600px; margin: auto; }
+        .message { margin-bottom: 1em; }
+        .user { color: #0074D9; font-weight: bold; }
+        .agent { color: #2ECC40; font-weight: bold; }
+        .form-box { margin-top: 2em; }
+        input[type="text"] { width: 80%; padding: 0.5em; border-radius: 4px; border: 1px solid #ccc; }
+        input[type="submit"] { padding: 0.5em 1em; border-radius: 4px; border: none; background: #0074D9; color: #fff; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="chat-box">
+        <h2>Help Me Fly - Chat Agent</h2>
+        <div id="history">
+            {% for item in history %}
+                <div class="message">
+                    <span class="user">You:</span> {{ item.query }}<br>
+                    <span class="agent">Agent:</span> {{ item.response }}
+                </div>
+            {% endfor %}
+        </div>
+        <form class="form-box" method="post">
+            <input type="text" name="userQuery" placeholder="Type your trip request..." required>
+            <input type="submit" value="Send">
+        </form>
+    </div>
+</body>
+</html>
