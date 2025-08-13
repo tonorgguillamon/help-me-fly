@@ -16,23 +16,27 @@ Metaheuristic-based algorithm to converge into an optimal solution which suits u
 - AWS Bedrock
 - REST API - Flask/FastAPI
 
+## Workflow
+![workflow](docs/help-me-fly-schema.jpg)
+
 ## DEMO
 ### Real scenario tested on the agent
-User query:
+User query
+
 Talk with the agency: we are two people. One from malaga with 500 euro budget. The other from valencia, with 600 euro budget. 
 we want to travel for 5 days between september and december 2025. We would like to visit either of the following cities: paris, london, milan, warsaw, barcelona, any city in denmark, any city in norway and rome. Price max of the whole trip 700 euro
 
 Response:
 ```json
 {
-  "listTravellers": [
+  "listTravellers": [      
     {
-      "origin": "Malaga",
-      "budget": 500.0
+      "origin": "Malaga",  
+      "budget": 500.0      
     },
     {
       "origin": "Valencia",
-      "budget": 600.0
+      "budget": 600.0      
     }
   ],
   "travelPlan": {
@@ -43,7 +47,7 @@ Response:
     "priceMax": 700,
     "days": 5,
     "allowStayover": true,
-    "availableDestinations": ["Paris", "London", "Milan", "Warsaw", "Barcelona", "Denmark", "Norway", "Rome"]
+    "availableDestinations": ["Paris", "London", "Milan", "Warsaw", "Barcelona", "Copenhagen", "Oslo", "Bergen", "Aarhus", "Aalborg", "Odense", "Stavanger", "Trondheim", "Tromsø", "Rome"]
   }
 }
 ```

@@ -64,7 +64,7 @@ class TravelPlan:
                 endDate=goingFlight.departure_date + timedelta(days=self.days),
                 priceMax=self.priceMax - goingFlight.price_eur,
                 startCity=destination,
-                destinationCities=originCity,
+                destinationCity=originCity,
                 stayoversAllowed=self.allowStayover
             )
 

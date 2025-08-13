@@ -17,7 +17,7 @@ creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", Trip, fitness=creator.FitnessMin)
 
 class GeneticAlgorithm:
-    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=5, ngen=1, probCrossover=0.9, probMutate=0.2):
+    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=8, ngen=100, probCrossover=0.9, probMutate=0.2):
         self.populationSize = populationSize
         self.ngen = ngen
         self.travellersTemplate = travellersTemplate
@@ -67,8 +67,8 @@ class GeneticAlgorithm:
         # Normalization:
         totalCost /= 1000 * len(individual.travellers)
         deltaBudget /= 500 * len(individual.travellers)
-        deltaTimeArrival = 3600 * 24 * len(individual.travellers) # 24 hours deviation, in seconds
-        deltaTimeBack = 3600 * 24 * len(individual.travellers)
+        deltaTimeArrival /= 3600 * 24 * len(individual.travellers) # 24 hours deviation, in seconds
+        deltaTimeBack /= 3600 * 24 * len(individual.travellers)
         depaturesSuitability /= len(individual.travellers)*2
         numStayovers /= len(individual.travellers)*4 # 4 stayovers per traveller is already extreme
 
