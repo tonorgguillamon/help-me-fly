@@ -40,6 +40,7 @@ def buildPlan(plan_json):
         travelPlan=travel_plan
     )
 
+
 def main():
     random.seed(50)
     DB = "flightsAPI"
@@ -47,18 +48,6 @@ def main():
 
     load_dotenv()
     
-    #print([Flight.model_validate(flight) for flight in flightEngine.retrieveAllFlights()])
-
-    #trip = FlightSelection(
-    #    startDate=datetime(2025, 11, 1),
-    #    endDate=datetime(2025, 11, 15),
-    #    priceMax=200,
-    #    startCity="Malaga",
-    #    stayoversAllowed=False
-    #)
-
-    #print([Flight.model_validate(flight) for flight in flightEngine.retrieveFlights(trip)])
-
     session = boto3.Session(
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
@@ -95,39 +84,6 @@ def main():
 
         except Exception as e:
             print(f"Error: {e}")
-
-    """
-    travellerA = Traveller(
-    origin="Malaga",
-    budget=300
-    )
-
-    travellerB = Traveller(
-        origin="Madrid",
-        budget=320
-    )
-
-    travellerC = Traveller(
-        origin="Munich",
-        budget=250
-    )
-
-    travellersTemplate = [
-        travellerA,
-        travellerB,
-        travellerC
-    ]
-
-    travelPlan = TravelPlan(
-        fromDate=date(2025, 9, 20),
-        toDate=date(2025, 12, 15),
-        priceMax=300,
-        days=10,
-        availableDestinations=[
-            "London", "Paris", "Rotterdam", "Berlin"
-        ],
-    )
-    """
 
     gaEngine = ga_engine.GeneticAlgorithm(
         travellersTemplate=planCreated.listTravellers,
