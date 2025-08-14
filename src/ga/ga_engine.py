@@ -17,7 +17,7 @@ creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", Trip, fitness=creator.FitnessMin)
 
 class GeneticAlgorithm:
-    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=50, ngen=100, probCrossover=0.9, probMutate=0.2):
+    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=100, ngen=50, probCrossover=0.8, probMutate=0.3):
         self.populationSize = populationSize
         self.ngen = ngen
         self.travellersTemplate = travellersTemplate
@@ -32,7 +32,7 @@ class GeneticAlgorithm:
         self.toolbox.register("evaluate", self.evaluate_individual)
         self.toolbox.register("mate", self.mate_individuals)
         self.toolbox.register("mutate", self.mutate_individual)
-        self.toolbox.register("select", tools.selTournament, tournsize=3)
+        self.toolbox.register("select", tools.selTournament, tournsize=5)
 
     def create_individual(self, flightEngine: FlightEngine):
         individual = creator.Individual(
@@ -53,24 +53,17 @@ class GeneticAlgorithm:
         deltaTimeBack = individual.deltaTime(arrival=False)
         depaturesSuitability = individual.calculateDeparturesSuitability()
         numStayovers = individual.calculateNumStayovers()
+        deltaDays = individual.deltaDays(self.travelPlan.days)
 
-        print("RAW VALUES: \n" \
-        f"Total Cost: {totalCost} \n" \
-        f"Delta Budget: {deltaBudget} \n" \
-        f"Delta Time Arrival: {deltaTimeArrival} \n" \
-        f"Delta Time Back: {deltaTimeBack} \n" \
-        f"Departure Suitability: {depaturesSuitability} \n" \
-        f"Number Stayovers: {numStayovers} \n" \
-        "------------------------------------------------ \n"
-        )
 
         # Normalization:
         totalCost /= 1000 * len(individual.travellers)
         deltaBudget /= 500 * len(individual.travellers)
-        deltaTimeArrival /= 3600 * 24 * len(individual.travellers) # 24 hours deviation, in seconds
-        deltaTimeBack /= 3600 * 24 * len(individual.travellers)
+        deltaTimeArrival /= (3600 * 24 * len(individual.travellers)) # 24 hours deviation, in seconds
+        deltaTimeBack /= (3600 * 24 * len(individual.travellers))
         depaturesSuitability /= len(individual.travellers)*2
-        numStayovers /= len(individual.travellers)*4 # 4 stayovers per traveller is already extreme
+        numStayovers /= len(individual.travellers)*2 # 4 stayovers per traveller is already extreme
+        deltaDays /= len(individual.travellers)*2 # 2 days longer or shorter trip is already quite bad
 
         deltaTime_penalty = 50
 
@@ -81,17 +74,18 @@ class GeneticAlgorithm:
             + deltaTimeBack * deltaTime_penalty
             + depaturesSuitability
             + numStayovers
+            + deltaDays
         )
 
-        print("NORMALIZED VALUES: \n" \
-        f"Total Cost: {totalCost} \n" \
-        f"Delta Budget: {deltaBudget} \n" \
-        f"Delta Time Arrival: {deltaTimeArrival} \n" \
-        f"Delta Time Back: {deltaTimeBack} \n" \
-        f"Departure Suitability: {depaturesSuitability} \n" \
-        f"Number Stayovers: {numStayovers} \n" \
-        " ---------------------------------------------- \n"
-        )
+        #print("NORMALIZED VALUES: \n" \
+        #f"Total Cost: {totalCost} \n" \
+        #f"Delta Budget: {deltaBudget} \n" \
+        #f"Delta Time Arrival: {deltaTimeArrival} \n" \
+        #f"Delta Time Back: {deltaTimeBack} \n" \
+        #f"Departure Suitability: {depaturesSuitability} \n" \
+        #f"Number Stayovers: {numStayovers} \n" \
+        #" ---------------------------------------------- \n"
+        #)
 
         return (penalization, )
 
@@ -136,10 +130,17 @@ class GeneticAlgorithm:
             individual = self.toolbox.individual()
             if individual:
                 population.append(individual)
+
+        # first evaluation: to get the elite
+        fitnesses = map(self.toolbox.evaluate, population)
+        for individual, fit in zip(population, fitnesses):
+            individual.fitness.values = fit
         
         for gen in range(self.ngen):
             offspring = self.toolbox.select(population, len(population))
             offspring = list(map(self.toolbox.clone, offspring))
+
+            elite = tools.selBest(population, 1)[0]
 
             # apply crossover (mate) and mutation
             for child1, child2 in zip(offspring[::2], offspring[1::2]):
@@ -160,11 +161,35 @@ class GeneticAlgorithm:
             for individual, fit in zip(invalidIndividuals, fitnesses):
                 individual.fitness.values = fit
             
+            # After all modifications, replace worst with elite, to keep the best individual from previous generation
+            worst = tools.selWorst(offspring, 1)[0]
+            idx = offspring.index(worst)
+            offspring[idx] = self.toolbox.clone(elite)
+
             population[:] = offspring
 
             best = tools.selBest(population, 1)[0]
 
             bestInvididualsScore.append(best.fitness.values[0])
-            print(f"Best score of the generation {gen}: {best.fitness.values[0]} \n Individual: {best}")
+            print(f"\nBest score of the generation {gen}: {best.fitness.values[0]} \n Individual: {best}")
+            
+            for i, traveller in enumerate(best.travellers):
+                print(f"Traveller {i+1}:")
+                print(f"  Origin: {traveller.origin}")
+                print(f"  Budget: €{traveller.budget:.2f}")
+                if traveller.selectedRoute:
+                    to = traveller.selectedRoute.flightToGo
+                    back = traveller.selectedRoute.flightBack
+                    print("  Outbound Flight:")
+                    print(f"    {to.from_city} → {to.to_city}")
+                    print(f"    Date: {to.departure_date} | Departure: {to.departure_time_local.time()} | Arrival: {to.arrival_time_local.time()}")
+                    print(f"    Price: €{to.price_eur:.2f} | Stayovers: {to.stayovers} | Flight: {to.flight_number} | Duration: {to.duration_hours}h")
+                    print("  Return Flight:")
+                    print(f"    {back.from_city} → {back.to_city}")
+                    print(f"    Date: {back.departure_date} | Departure: {back.departure_time_local.time()} | Arrival: {back.arrival_time_local.time()}")
+                    print(f"    Price: €{back.price_eur:.2f} | Stayovers: {back.stayovers} | Flight: {back.flight_number} | Duration: {back.duration_hours}h")
+                    print(f"  Total Route Cost: €{traveller.selectedRoute.cost:.2f}\n")
+            
+            print("-"*50)
 
         return bestInvididualsScore, best

@@ -58,35 +58,36 @@ Response:
 This is used to build the Plan instance, which is fed to the Genetic Algorithm.
 With the foundations stablished, the GA starts to evolve, storing the best individual from each offspring.
 After the determined number of generations, we can see how the algorithm is converging:
-![ga_evolution](docs/ga_evolution.png)
+![ga_evolution](docs/ga_evolution_3.png)
 
 Suggested trip:
 
-Chosen destination: London
 ```
+Chosen destination: Rome
+
 Traveller 1:
   Origin: Malaga
   Budget: €500.00
   Outbound Flight:
-    Malaga → London
-    Date: 2025-11-23 | Departure: 20:45:00 | Arrival: 00:15:00
-    Price: €309.11 | Stayovers: 0 | Flight: LH3498 | Duration: 4.5h
+    Malaga → Rome
+    Date: 2025-11-24 | Departure: 18:45:00 | Arrival: 19:51:00
+    Price: €10.59 | Stayovers: 1 | Flight: SK4053 | Duration: 1.1h
   Return Flight:
-    London → Malaga
-    Date: 2025-11-26 | Departure: 06:00:00 | Arrival: 12:00:00
-    Price: €29.26 | Stayovers: 1 | Flight: AF8903 | Duration: 5.0h
-  Total Route Cost: €338.37
+    Rome → Malaga
+    Date: 2025-11-29 | Departure: 20:15:00 | Arrival: 01:15:00
+    Price: €37.10 | Stayovers: 0 | Flight: SK3668 | Duration: 5.0h
+  Total Route Cost: €47.69
 
 Traveller 2:
   Origin: Valencia
   Budget: €600.00
   Outbound Flight:
-    Valencia → London
-    Date: 2025-11-11 | Departure: 18:15:00 | Arrival: 22:09:00
-    Price: €314.99 | Stayovers: 1 | Flight: IB8996 | Duration: 4.9h
+    Valencia → Rome
+    Date: 2025-11-24 | Departure: 21:00:00 | Arrival: 23:54:00
+    Price: €186.41 | Stayovers: 0 | Flight: KL7241 | Duration: 2.9h
   Return Flight:
-    London → Valencia
-    Date: 2025-11-13 | Departure: 11:30:00 | Arrival: 15:36:00
-    Price: €170.37 | Stayovers: 1 | Flight: AZ450 | Duration: 3.1h
-  Total Route Cost: €485.36
+    Rome → Valencia
+    Date: 2025-11-29 | Departure: 20:45:00 | Arrival: 23:57:00
+    Price: €253.35 | Stayovers: 1 | Flight: LO1863 | Duration: 3.2h
+  Total Route Cost: €439.76
 ```

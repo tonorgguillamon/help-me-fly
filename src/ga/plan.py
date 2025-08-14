@@ -115,6 +115,11 @@ class Trip:
             route.cost = route.flightToGo.price_eur + route.flightBack.price_eur
             traveller.selectedRoute = route
 
+    def deltaDays(self, daysSelected: int):
+        daysList = [traveller.selectedRoute.flightBack.departure_date - traveller.selectedRoute.flightToGo.departure_date for traveller in self.travellers]
+        daysSelected_td = timedelta(days=daysSelected)
+        return sum(abs(days - daysSelected_td).total_seconds() for days in daysList)
+
     def deltaTime(self, arrival: bool = True): # arrival or leaving
         deltas = []
         if arrival:
