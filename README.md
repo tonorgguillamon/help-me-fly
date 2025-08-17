@@ -22,7 +22,7 @@ Metaheuristic-based algorithm to converge into an optimal solution which suits u
 ## DEMO
 ### Real scenario tested on the agent
 Simple user interface (FastAPI + HTML)
-![alt text](docs/ui_realcase_.png)
+![alt text](docs/ui_realcase.png)
 
 In case the Agent misses information for completing the Trip Plan it lets the user know.
 When the query contains all necessary parameters it generates a JSON-like string that can be parsed in the codeflow and eventually injected as class instances.
