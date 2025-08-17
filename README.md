@@ -15,6 +15,8 @@ Metaheuristic-based algorithm to converge into an optimal solution which suits u
 - Pydantic
 - AWS Bedrock
 - REST API - Flask/FastAPI
+- WebSockets
+- Async
 
 ## Workflow
 ![workflow](docs/help-me-fly-schema.jpg)
