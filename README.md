@@ -29,9 +29,9 @@ When the query contains all necessary parameters it generates a JSON-like string
 
 Thanks to LLM the workflow is dynamic.
 
-> Valid User query
+Valid User query
 
-"Talk with the agency: we are two people. One from Malaga with 500 euro budget. The other from Valencia, with 600 euro budget. 
+> "Talk with the agency: we are two people. One from Malaga with 500 euro budget. The other from Valencia, with 600 euro budget. 
 we want to travel for 5 days between september and december 2025. We would like to visit either of the following cities: paris, london, milan, warsaw, barcelona, any city in denmark, any city in norway and rome. Price max of the whole trip 700 euro"
 
 Response:
