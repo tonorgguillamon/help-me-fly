@@ -11,13 +11,14 @@ from src.ga.plan import *
 from src.flightSearcher import FlightEngine
 import multiprocessing
 from functools import partial
+import asyncio
 
 # Individual
 creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
 creator.create("Individual", Trip, fitness=creator.FitnessMin)
 
 class GeneticAlgorithm:
-    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=100, ngen=50, probCrossover=0.8, probMutate=0.3):
+    def __init__(self, travellersTemplate, travelPlan, flightEngine, populationSize=5, ngen=5, probCrossover=0.8, probMutate=0.3):
         self.populationSize = populationSize
         self.ngen = ngen
         self.travellersTemplate = travellersTemplate
@@ -169,27 +170,43 @@ class GeneticAlgorithm:
             population[:] = offspring
 
             best = tools.selBest(population, 1)[0]
+            yield self.printIndividual(gen, best)
 
-            bestInvididualsScore.append(best.fitness.values[0])
-            print(f"\nBest score of the generation {gen}: {best.fitness.values[0]} \n Individual: {best}")
-            
-            for i, traveller in enumerate(best.travellers):
-                print(f"Traveller {i+1}:")
-                print(f"  Origin: {traveller.origin}")
-                print(f"  Budget: €{traveller.budget:.2f}")
-                if traveller.selectedRoute:
-                    to = traveller.selectedRoute.flightToGo
-                    back = traveller.selectedRoute.flightBack
-                    print("  Outbound Flight:")
-                    print(f"    {to.from_city} → {to.to_city}")
-                    print(f"    Date: {to.departure_date} | Departure: {to.departure_time_local.time()} | Arrival: {to.arrival_time_local.time()}")
-                    print(f"    Price: €{to.price_eur:.2f} | Stayovers: {to.stayovers} | Flight: {to.flight_number} | Duration: {to.duration_hours}h")
-                    print("  Return Flight:")
-                    print(f"    {back.from_city} → {back.to_city}")
-                    print(f"    Date: {back.departure_date} | Departure: {back.departure_time_local.time()} | Arrival: {back.arrival_time_local.time()}")
-                    print(f"    Price: €{back.price_eur:.2f} | Stayovers: {back.stayovers} | Flight: {back.flight_number} | Duration: {back.duration_hours}h")
-                    print(f"  Total Route Cost: €{traveller.selectedRoute.cost:.2f}\n")
-            
-            print("-"*50)
+        yield self.printIndividual(-1, best)
 
-        return bestInvididualsScore, best
+    def printIndividual(self, generation, individual):
+        if generation == -1:
+            headerMessage = f"Best store along all the generations: {individual.fitness.values[0]}.\nThis is my suggested trip plan:\n"
+        else:
+            headerMessage = f"\nBest score of the generation {generation}: {individual.fitness.values[0]}"
+        
+        lines = [headerMessage]
+
+        for i, traveller in enumerate(individual.travellers, start=1):
+            lines.append(f"Traveller {i}:")
+            lines.append(f"  Origin: {traveller.origin}")
+            lines.append(f"  Budget: €{traveller.budget:.2f}")
+
+            if traveller.selectedRoute:
+                to = traveller.selectedRoute.flightToGo
+                back = traveller.selectedRoute.flightBack
+
+                lines.extend([
+                    "  Outbound Flight:",
+                    f"    {to.from_city} → {to.to_city}",
+                    f"    Date: {to.departure_date} | Departure: {to.departure_time_local.time()} | Arrival: {to.arrival_time_local.time()}",
+                    f"    Price: €{to.price_eur:.2f} | Stayovers: {to.stayovers} | Flight: {to.flight_number} | Duration: {to.duration_hours}h",
+                    "  Return Flight:",
+                    f"    {back.from_city} → {back.to_city}",
+                    f"    Date: {back.departure_date} | Departure: {back.departure_time_local.time()} | Arrival: {back.arrival_time_local.time()}",
+                    f"    Price: €{back.price_eur:.2f} | Stayovers: {back.stayovers} | Flight: {back.flight_number} | Duration: {back.duration_hours}h",
+                    f"  Total Route Cost: €{traveller.selectedRoute.cost:.2f}\n"
+                ])
+
+        lines.append("-" * 50)
+        return "\n".join(lines)
+
+# Adjusting run so that it's async. It allows to yield/iterate over asynchronously
+async def run_ga_generator(ga_engine):
+    for update in await asyncio.to_thread(lambda: ga_engine.run()):
+        yield update

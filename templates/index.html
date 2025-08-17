@@ -16,18 +16,68 @@
 <body>
     <div class="chat-box">
         <h2>Help Me Fly - Chat Agent</h2>
-        <div id="history">
-            {% for item in history %}
-                <div class="message">
-                    <span class="user">You:</span> {{ item.query }}<br>
-                    <span class="agent">Agent:</span> {{ item.response }}
-                </div>
-            {% endfor %}
-        </div>
-        <form class="form-box" method="post">
-            <input type="text" name="userQuery" placeholder="Type your trip request..." required>
+        <div id="history"></div>
+        <form class="form-box" id="chatForm">
+            <input type="text" id="userQuery" name="userQuery" placeholder="Type your trip request..." required>
             <input type="submit" value="Send">
         </form>
     </div>
+
+    <script>
+        const form = document.getElementById("chatForm");
+        const historyDiv = document.getElementById("history");
+
+        // Open WebSocket once
+        const ws = new WebSocket("ws://" + window.location.host + "/ws/plan-trip");
+
+        ws.onopen = () => {
+            console.log("WebSocket connected");
+        };
+
+        ws.onmessage = (event) => {
+            const data = event.data;
+            try {
+                const obj = JSON.parse(data);
+                appendMessage("Agent", JSON.stringify(obj, null, 2));
+            } catch {
+                appendMessage("Agent", data);
+            }
+        };
+
+        ws.onerror = (err) => {
+            appendMessage("Agent", "WebSocket error: " + err);
+        };
+
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();
+            const query = document.getElementById("userQuery").value;
+            appendMessage("You", query);
+
+            // Always send JSON object with userQuery
+            ws.send(JSON.stringify({ userQuery: query }));
+
+            document.getElementById("userQuery").value = "";
+        });
+
+        function appendMessage(sender, text) {
+            const div = document.createElement("div");
+            div.classList.add("message");
+
+            const senderSpan = document.createElement("span");
+            senderSpan.className = sender === "You" ? "user" : "agent";
+            senderSpan.textContent = sender + ":";
+
+            const textPre = document.createElement("pre");
+            textPre.style.whiteSpace = "pre-wrap"; // preserves \n and spaces
+            textPre.textContent = text;
+
+            div.appendChild(senderSpan);
+            div.appendChild(document.createTextNode(" ")); // optional space
+            div.appendChild(textPre);
+
+            historyDiv.appendChild(div);
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+    </script>
 </body>
 </html>

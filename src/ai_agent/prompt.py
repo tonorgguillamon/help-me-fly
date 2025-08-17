@@ -33,6 +33,7 @@ tripBuilder = Prompt(
         "   - `days`: int = None (default 7)\n"
         "   - `allowStayover`: bool = True\n"
         "   - `availableDestinations`: list[str] = required\n"
+        " The user could say a country as a destination. In this case, add every big city from that country to the list of available destinations."
         "The output MUST be as JSON."
         "If missing information from the user, the output must have just a key-value -> missingInformaiton: explanation what's missing."
         "Start with ```json and finish with ```. Write NOTHING MORE.\n"
