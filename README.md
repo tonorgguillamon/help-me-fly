@@ -65,7 +65,7 @@ Response:
 The AGENT response is used to build the Plan instance, which is fed to the Genetic Algorithm.
 
 Plan_json is the argument of the function which just formats the LLM response to create an instance of the clas Plan.
-```
+```python
 def buildPlan(plan_json):
     """
     plan json is the output of the Agent which parametrizes the user' query
