@@ -96,6 +96,8 @@ def buildPlan(plan_json):
 
 ```
 
+![flow_chain](docs/basic_flow.jpg)
+
 With the foundations stablished, the GA starts to evolve, storing the best individual from each offspring.
 After the determined number of generations, we can see how the algorithm is converging:
 ![ga_evolution](docs/ga_evolution_3.png)
