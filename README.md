@@ -62,7 +62,40 @@ Response:
 }
 ```
 
-This is used to build the Plan instance, which is fed to the Genetic Algorithm.
+The AGENT response is used to build the Plan instance, which is fed to the Genetic Algorithm.
+
+Plan_json is the argument of the function which just formats the LLM response to create an instance of the clas Plan.
+```
+def buildPlan(plan_json):
+    """
+    plan json is the output of the Agent which parametrizes the user' query
+    into Traveller and TravelPlan
+    """
+    travellers_json = plan_json["listTravellers"]
+    travellers = []
+
+    for traveller_json in travellers_json:
+        travellers.append(Traveller.model_validate(traveller_json))
+
+    travel_json = plan_json["travelPlan"]
+    travel_plan = TravelPlan(
+        fromDate=datetime.strptime(travel_json["fromDate"], "%Y-%m-%d").date(),
+        toDate=datetime.strptime(travel_json["toDate"], "%Y-%m-%d").date(),
+        vetoCities=travel_json.get("vetoCities"),
+        preferredCities=travel_json.get("preferredCities"),
+        priceMax=travel_json.get("priceMax"),
+        days=travel_json.get("days"),
+        allowStayover=travel_json.get("allowStayover"),
+        availableDestinations=travel_json.get("availableDestinations")
+    )
+    
+    return Plan(
+        listTravellers=travellers,
+        travelPlan=travel_plan
+    )
+
+```
+
 With the foundations stablished, the GA starts to evolve, storing the best individual from each offspring.
 After the determined number of generations, we can see how the algorithm is converging:
 ![ga_evolution](docs/ga_evolution_3.png)
