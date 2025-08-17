@@ -26,27 +26,40 @@
     <script>
         const form = document.getElementById("chatForm");
         const historyDiv = document.getElementById("history");
+        let ws;
 
-        // Open WebSocket once
-        const ws = new WebSocket("ws://" + window.location.host + "/ws/plan-trip");
+        function openWebSocket() {
+            ws = new WebSocket("ws://" + window.location.host + "/ws/plan-trip");
 
-        ws.onopen = () => {
-            console.log("WebSocket connected");
-        };
+            ws.onopen = () => {
+                console.log("WebSocket connected");
+            };
 
-        ws.onmessage = (event) => {
-            const data = event.data;
-            try {
-                const obj = JSON.parse(data);
-                appendMessage("Agent", JSON.stringify(obj, null, 2));
-            } catch {
-                appendMessage("Agent", data);
-            }
-        };
+            ws.onmessage = (event) => {
+                const data = event.data;
 
-        ws.onerror = (err) => {
-            appendMessage("Agent", "WebSocket error: " + err);
-        };
+                if (data === "[DONE]") {
+                    appendMessage("Agent", "--- End of plan ---");
+                    ws.close();
+                    return;
+                }
+
+                try {
+                    const obj = JSON.parse(data);
+                    appendMessage("Agent", JSON.stringify(obj, null, 2));
+                } catch {
+                    appendMessage("Agent", data);
+                }
+            };
+
+            ws.onclose = () => { // event triggered by backend
+                console.log("WebSocket closed. Reconnecting...");
+                setTimeout(openWebSocket, 500);
+            };
+            ws.onerror = (err) => {
+                appendMessage("Agent", "WebSocket error: " + err);
+            };
+        }
 
         form.addEventListener("submit", function(event) {
             event.preventDefault();
@@ -58,6 +71,8 @@
 
             document.getElementById("userQuery").value = "";
         });
+
+        openWebSocket();
 
         function appendMessage(sender, text) {
             const div = document.createElement("div");

@@ -203,7 +203,6 @@ class GeneticAlgorithm:
                     f"  Total Route Cost: €{traveller.selectedRoute.cost:.2f}\n"
                 ])
 
-        lines.append("-" * 50)
         return "\n".join(lines)
 
 # Adjusting run so that it's async. It allows to yield/iterate over asynchronously

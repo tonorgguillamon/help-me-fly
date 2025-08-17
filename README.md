@@ -22,11 +22,16 @@ Metaheuristic-based algorithm to converge into an optimal solution which suits u
 ## DEMO
 ### Real scenario tested on the agent
 Simple user interface (FastAPI + HTML)
-![alt text](docs/ui-simple.png)
+![alt text](docs/ui_realcase_.png)
 
-User query
+In case the Agent misses information for completing the Trip Plan it lets the user know.
+When the query contains all necessary parameters it generates a JSON-like string that can be parsed in the codeflow and eventually injected as class instances.
 
-"Talk with the agency: we are two people. One from malaga with 500 euro budget. The other from valencia, with 600 euro budget. 
+Thanks to LLM the workflow is dynamic.
+
+> Valid User query
+
+"Talk with the agency: we are two people. One from Malaga with 500 euro budget. The other from Valencia, with 600 euro budget. 
 we want to travel for 5 days between september and december 2025. We would like to visit either of the following cities: paris, london, milan, warsaw, barcelona, any city in denmark, any city in norway and rome. Price max of the whole trip 700 euro"
 
 Response:
@@ -59,6 +64,8 @@ This is used to build the Plan instance, which is fed to the Genetic Algorithm.
 With the foundations stablished, the GA starts to evolve, storing the best individual from each offspring.
 After the determined number of generations, we can see how the algorithm is converging:
 ![ga_evolution](docs/ga_evolution_3.png)
+
+The first suggestions are usually pretty bad, cause they come from randomization. After few offsprings, the algorithm starts pointing to better solutions.
 
 Suggested trip:
 
