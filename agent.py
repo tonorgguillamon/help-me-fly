@@ -40,12 +40,7 @@ def buildPlan(plan_json):
         travelPlan=travel_plan
     )
 
-
-def main():
-    random.seed(50)
-    DB = "flightsAPI"
-    flightEngine = FlightEngine(DB)
-
+def configureLLM():
     load_dotenv()
     
     session = boto3.Session(
@@ -60,6 +55,14 @@ def main():
         region=os.getenv("AWS_REGION"),
         version="bedrock-2023-05-31"
     )
+    return llm
+
+def main():
+    random.seed(50)
+    DB = "flightsAPI"
+    flightEngine = FlightEngine(DB)
+
+    llm = configureLLM()
 
     while True:
         query = input("Talk with the agency: ")
